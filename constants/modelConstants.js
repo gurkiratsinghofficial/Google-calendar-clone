@@ -1,0 +1,3 @@
+exports.modelConstants = {
+  USER: "User",
+};
