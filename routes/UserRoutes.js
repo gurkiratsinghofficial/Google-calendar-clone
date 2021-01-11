@@ -35,6 +35,7 @@ module.exports = (app) => {
   router.post("/", upload.single("profilePhoto"), users.userControl.signUp);
   router.put("/", upload.single("profilePhoto"), users.userControl.update);
   router.post("/login", users.userControl.login);
+  router.get("/confirmation/:token", users.userControl.confirmation);
   router.get("/fetchUser", users.userControl.findOneUser);
   router.get("/allUserData", users.userControl.allUserData);
   app.use("/api/users", router);

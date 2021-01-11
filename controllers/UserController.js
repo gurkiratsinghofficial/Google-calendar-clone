@@ -10,6 +10,16 @@ const { sendResponse } = require("../response/sendResponse");
 
 const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv");
+const nodemailer = require("nodemailer");
+
+/**setup nodemailer */
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.PASSWORD,
+  },
+});
 
 dotenv.config();
 cloudinary.config({
@@ -53,9 +63,36 @@ exports.userControl = {
       });
       //Save user in database
       const savedUser = await user.save();
-      if (savedUser) return sendResponse(constants.SIGNUP_SUCCESS, res, 200);
+      if (savedUser) {
+        const emailToken =jwt.sign({_id:savedUser._id},process.env.TOKEN,{expiresIn:"1d"})
+        const url=`https://eventify-calendar.herokuapp.com/api/users/confirmation/${emailToken}`
+        await transporter.sendMail({
+          to:savedUser.email,
+          subject:"Eventify | confirm email address",
+          html:`<a href="${url}">Click here</a> to verify your Eventify account!`
+        })
+        return sendResponse(constants.SIGNUP_SUCCESS, res, 200);
+      }
       else return sendResponse(constants.SIGNUP_FAILED, res, 500);
     } catch (err) {
+      return sendResponse(err.message, res, 500);
+    }
+  },
+  /**
+   * @description: email confirmation route
+   * @param {object} req 
+   * @param {object} res 
+   */
+  confirmation:async(req,res)=>{
+    try{
+      const id=  jwt.verify(req.params.token,process.env.TOKEN)
+      const userInfo = await User.findOne({ _id: id._id });
+      if(userInfo){
+        await userInfo.updateOne({ activation:true  })
+        return res.redirect("https://eventify-manager.netlify.app")
+      }else return sendResponse(constants.ACTIVATION_FAILED, res, 500);
+      
+    }catch(err){
       return sendResponse(err.message, res, 500);
     }
   },
@@ -97,10 +134,12 @@ exports.userControl = {
         phone: phone ? phone : undefined,
         address: address ? address : undefined,
       });
-      if (req.file)
+      if (req.file){
+        const cloud = await cloudinary.uploader.upload(req.file.path);
         await userInfo.updateOne({
-          profilePhoto: req.file.filename,
+          profilePhoto: cloud.url,
         });
+      }
       if (!updated) return sendResponse(constants.CANNOT_UPDATE_USER, res, 500);
       else return sendResponse(constants.USER_UPDATED, res, 200);
     } catch (err) {
@@ -121,6 +160,9 @@ exports.userControl = {
       //Check if user exists
       const user = await User.findOne({ email: req.body.email });
       if (!user) return sendResponse(constants.USER_NOT_FOUND, res, 400);
+
+      //Check if email address is verified
+      if(!user.activation) return sendResponse(constants.VERIFY_EMAIL, res, 500);
 
       //Compare passwords
       const validPass = await bcrypt.compare(req.body.password, user.password);

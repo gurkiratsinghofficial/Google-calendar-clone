@@ -12,6 +12,14 @@ exports.constants = {
     success: "false",
     message: "email already exists",
   },
+  VERIFY_EMAIL:{
+    success: "false",
+    message: "Please verify email first",
+  },
+  ACTIVATION_FAILED:{
+    success: "false",
+    message: "account activation failed",
+  },
   ERROR_NEW_USER: {
     success: "false",
     message: "error creating a new user",
