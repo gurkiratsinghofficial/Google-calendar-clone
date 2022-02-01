@@ -239,7 +239,7 @@ exports.userControl = {
       if (!userID) return sendResponse(constants.USER_NOT_SIGN, res, 500);
       /**find the requesting user */
       const requestingUser = await User.findOne({ _id: userID._id });
-      const users = await User.find();
+      const users = await User.find({activation:true, email:/gurkirat/});
       if (!users) return sendResponse(constants.USER_NOT_FOUND, res, 400);
       let responseData = [];
       for (let i = 0; i < users.length; i++) {
