@@ -11,7 +11,9 @@ const { sendResponse } = require("../response/sendResponse");
 
 /**setup nodemailer */
 const transporter = nodemailer.createTransport({
-  service: "Gmail",
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure:true,
   auth: {
     user: process.env.EMAIL,
     pass: process.env.PASSWORD,
