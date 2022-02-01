@@ -7,10 +7,10 @@ let cors = require("cors");
 
 //Connect to database
 dotenv.config();
-mongoose.connect(process.env.DB_CONNECT, {
+mongoose.connect(process.env.DB_CONNECT, { 
   useNewUrlParser: true,
   useUnifiedTopology: true,
-});
+}).then(()=>console.log('Server started'));
 
 const app = express();
 app.use(cors());
